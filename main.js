@@ -32,6 +32,7 @@ global.loadFile = file => {
     if (plugin.type === 'command') {
         commands.set(plugin.name, plugin);
     } else if (plugin.type === 'event') {
+        plugin.file = file;
         eventHandlers.set(plugin.name, plugin);
     }
 
@@ -52,6 +53,8 @@ global.requireAll = dir => {
     });
     return plugins;
 }
+
+require('./vars.js'); // This takes priority before any plugins
 
 requireAll('./plugins');
 
