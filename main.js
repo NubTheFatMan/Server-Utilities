@@ -1,3 +1,8 @@
+global.Stopwatch = require('@sapphire/stopwatch').Stopwatch;
+
+global.startWatch = new Stopwatch();
+global.initTime = null;
+
 global.Discord = require('discord.js');
 global.fs      = require('fs');
 
@@ -25,7 +30,6 @@ global.loadFile = file => {
 
     let plugin = require(file);
     if (plugin.type === 'command') {
-        if (!plugin.allowed instanceof Array) plugin.allowed = [];
         commands.set(plugin.name, plugin);
     } else if (plugin.type === 'event') {
         eventHandlers.set(plugin.name, plugin);
