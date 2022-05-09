@@ -18,27 +18,48 @@ exports.callback = (message, args) => {
             message.reply(`An error occured while reloading plugins: \`\`\`\n${err.stack}\`\`\``).catch(console.error);
         }
     } else {
-        // If reloading an event, we need to remove the client listener callback so it doesn't double up
-        for (let [name, plug] of eventHandlers) {
-            if (plug.file === plugin) {
-                client.removeListener(plug.event, plug.callback);
+        let reloaded = false;
+        for (let [file, plug] of plugins) {
+            if (file === plugin || plug.name === plugin || plug.calls.includes(plugin)) {
+                try {
+                    if (plug.type === 'event')
+                        client.removeListener(plug.event, plug.callback);
+
+                    let reloaded = loadFile(file);
+                    if (reloaded) {
+                        if (reloaded.type === 'command') {
+                            message.reply(`Reloaded command \`${reloaded.name}\``).catch(console.error);
+                        } else if (reloaded.type === 'event') {
+                            message.reply(`Reloaded event \`${reloaded.name}\``).catch(console.error);
+                            client.on(reloaded.event, reloaded.callback);
+                        }
+                    } else {
+                        message.reply(`${emotes.approve} Reloaded file, but had no structure.`).catch(console.error);
+                    }
+                } catch (err) {
+                    message.reply(`An error occured while reloading \`${plug.name}\`: \`\`\`\n${err.stack}\`\`\``).catch(console.error);
+                }
+                reloaded = true;
+                break;
             }
         }
 
-        try {
-            let plug = loadFile(plugin);
-            if (plug.type === 'event') {
-                eventHandlers.set(plug.name, plug);
-                client.on(plug.event, plug.callback);
-                message.reply(`Reloaded event \`${plug.name}\``).catch(console.error);
-            } else if (plug.type === 'command') {
-                commands.set(plug.name, plug);
-                message.reply(`Reloaded command \`${plug.name}\``).catch(console.error);
-            } else {
-                message.reply(`Plugin doesn't have a command or event structure, but file is running.`).catch(console.error);
+        if (!reloaded) {
+            try {
+                let plug = loadFile(plugin);
+                if (plug) {
+                    if (plug.type === 'command') {
+                        message.reply(`Loaded command \`${plug.name}\``).catch(console.error);
+                    } else if (plug.type === 'event') {
+                        message.reply(`Loaded event \`${plug.name}\``).catch(console.error);
+                        client.on(plug.event, plug.callback);
+                    }
+                } else {
+                    message.reply(`${emotes.approve} Loaded file, but had no structure.`).catch(console.error);
+                }
+            } catch (err) {
+                message.reply(`An error occured while loading \`${plugin}\`: \`\`\`\n${err.stack}\`\`\``).catch(console.error);
             }
-        } catch (err) {
-            message.reply(`An error occured while reloading plugin: \`\`\`\n${err.stack}\`\`\``).catch(console.error);
         }
     }
 }

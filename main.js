@@ -22,6 +22,7 @@ global.client = new Discord.Client({
 
 global.commands = new Map();
 global.eventHandlers = new Map();
+global.plugins = new Map();
 
 global.loadFile = file => {
     if (require.cache[require.resolve(file)]) {
@@ -35,6 +36,7 @@ global.loadFile = file => {
         plugin.file = file;
         eventHandlers.set(plugin.name, plugin);
     }
+    plugins.set(file, plugin);
 
     return plugin;
 }
